@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Providers · FabTrace{% endblock %}
+{% block content %}
+  <section class="hero compact">
+    <div><p class="eyebrow">Provider lens</p><h1>Evidence, not rankings.</h1><p class="lede">Orders grouped by provider identity without an invented performance score.</p></div>
+  </section>
+  <section class="panel filter-panel">
+    <form action="/providers" method="get">
+      <label for="scenario_id">Scenario</label>
+      <select id="scenario_id" name="scenario_id">
+        <option value="">All scenarios</option>
+        {% for scenario in scenarios %}<option value="{{ scenario }}" {% if scenario == selected_scenario %}selected{% endif %}>{{ scenario }}</option>{% endfor %}
+      </select>
+      <button type="submit">Apply filter</button>
+    </form>
+  </section>
+  <section class="provider-grid">
+    {% for provider in providers %}
+      <article class="panel provider-card">
+        <p class="eyebrow">Source {{ provider.source_provider_id }}</p>
+        <h2>{{ provider.provider_profile_id }}</h2>
+        <p>{{ provider.orders | length }} visible order{% if provider.orders | length != 1 %}s{% endif %}</p>
+        <div class="provider-orders">
+          {% for order in provider.orders %}
+            <a href="/orders/{{ order.scenario_id }}/{{ order.purchase_order_id }}">
+              <span><strong>{{ order.purchase_order_id }}</strong><small>{{ order.scenario_id }}</small></span>
+              <span class="status status-{{ order.order_status | lower }}">{{ order.order_status | replace('_', ' ') }}</span>
+              <span>{% if order.forecast_drift_days is not none %}{% if order.forecast_drift_days > 0 %}+{% endif %}{{ order.forecast_drift_days }} d drift{% else %}No metric snapshot{% endif %}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </article>
+    {% else %}
+      <div class="panel empty-state"><strong>No providers found.</strong></div>
+    {% endfor %}
+  </section>
+{% endblock %}

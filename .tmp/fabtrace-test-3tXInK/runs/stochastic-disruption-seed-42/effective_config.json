@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "generator_version": "0.1.0",
+  "scenario": {
+    "scenario_id": "stochastic-disruption",
+    "scenario_version": 1,
+    "seed": 42,
+    "synthetic": true,
+    "start_at": "2026-01-05T00:00:00Z"
+  },
+  "providers": [
+    {
+      "profile_id": "P208-synthetic-v1",
+      "profile_version": 1,
+      "simulation_name": "Synthetic Wafer Supplier P208",
+      "synthetic": true,
+      "source": {
+        "provider_id": "P208",
+        "provider_name": "Shin-Etsu",
+        "provider_type": "organization",
+        "country_code": "JPN",
+        "country_name": "Japan",
+        "aliases": []
+      },
+      "capabilities": [
+        {
+          "input_id": "N26",
+          "input_name": "Wafer",
+          "input_type": "material_resource",
+          "description": "Silicon wafers are the basic building block for chip production. To produce them, a furnace forms a cylinder of silicon (or other semiconducting materials), which is then cut into disc-shaped wafers. These wafers are then processed, split and packaged into individual chips. Most wafers are made purely of silicon or another material, but others have more complex structures.  Dopants, such as boron, aluminum, phosphorous, platinum or other elements, may be added to alter the level of semiconductivity.\n\n300 mm wafers, produced by Japanese, Taiwanese, German, and Korean firms, are used to produce nearly all advanced chips today. Manufacturing the smoothest, high-purity 300 mm wafers-which are necessary for supporting the smallest chip feature sizes-requires considerable tacit know-how. Older-technology wafer sizes include 150 and 200 mm, used for chips with larger feature sizes.",
+          "source_year": 2019,
+          "market_size_info": "$10.9 billion",
+          "share_provided": null,
+          "provision_year": 2019,
+          "source_citation": "[CSET](https://cset.georgetown.edu/publication/the-semiconductor-supply-chain/) (citing CSET estimates based on financial statements and wafer production capacities)"
+        }
+      ],
+      "synthetic_capabilities": [
+        {
+          "source_capability_id": "N26",
+          "unit": "wafer",
+          "daily_capacity": 25,
+          "quality_check_days": 1
+        }
+      ],
+      "operations": {
+        "acknowledgement_delay_days": 0,
+        "queue_delay_days": 1,
+        "transit_days": 2
+      },
+      "communication": {
+        "channel": "email",
+        "progress_update_interval_days": 1,
+        "style": "formal",
+        "send_milestone_updates": true
+      },
+      "disruption_model": {
+        "model_version": 1,
+        "daily_failure_probability": 0.5,
+        "maximum_failures_per_order": 1,
+        "downtime_distribution": [
+          {
+            "days": 1,
+            "weight": 0.25
+          },
+          {
+            "days": 2,
+            "weight": 0.5
+          },
+          {
+            "days": 3,
+            "weight": 0.25
+          }
+        ],
+        "reason_distribution": [
+          {
+            "reason_code": "equipment_calibration",
+            "weight": 0.6
+          },
+          {
+            "reason_code": "unplanned_maintenance",
+            "weight": 0.4
+          }
+        ]
+      }
+    }
+  ],
+  "purchase_orders": [
+    {
+      "purchase_order_id": "PO-0001",
+      "provider_profile_id": "P208-synthetic-v1",
+      "capability_id": "N26",
+      "quantity": 100,
+      "unit": "wafer"
+    }
+  ],
+  "incidents": [],
+  "incident_generation": {
+    "mode": "seeded_stochastic",
+    "model": "provider_profile",
+    "random_stream_version": 1
+  }
+}

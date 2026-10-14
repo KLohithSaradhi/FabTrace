@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Plans · FabTrace{% endblock %}
+{% block content %}
+  <section class="hero compact">
+    <div>
+      <p class="eyebrow">Planner v1</p>
+      <h1>Immutable order plans.</h1>
+      <p class="lede">Each plan records expanded demand, provider orders, a deterministic schedule, and its critical path.</p>
+    </div>
+    <a class="button-link secondary" href="/products">Choose a product</a>
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel-heading">
+      <h2>Generated plans</h2>
+      <span>{{ plans|length }} plan{% if plans|length != 1 %}s{% endif %}</span>
+    </div>
+    {% if plans %}
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Order</th><th>Product</th><th>Quantity</th><th>Requested</th><th>Expected delivery</th><th>Provider orders</th></tr></thead>
+          <tbody>
+            {% for plan in plans %}
+              <tr>
+                <td><a class="order-link" href="/plans/{{ plan.order_id }}">{{ plan.order_id }}</a></td>
+                <td>{{ plan.product_id }} <small>v{{ plan.product_version }}</small></td>
+                <td class="number">{{ plan.requested_quantity }} {{ plan.output_unit }}</td>
+                <td><time>{{ plan.requested_at.isoformat() }}</time></td>
+                <td><time>{{ plan.expected_delivery_at.isoformat() }}</time></td>
+                <td class="number">{{ plan.provider_order_count }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state"><strong>No plans yet.</strong><span>Publish a product and choose Plan order.</span></div>
+    {% endif %}
+  </section>
+{% endblock %}

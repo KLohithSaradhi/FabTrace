@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ plan.order_id }} · FabTrace{% endblock %}
+{% block content %}
+  <a class="back-link" href="/plans">← All plans</a>
+  <section class="detail-header">
+    <div>
+      <p class="eyebrow">Immutable planner-v1 artifact</p>
+      <h1>{{ plan.order_id }}</h1>
+      <p>{{ plan.product_id }} v{{ plan.product_version }} · {{ plan.requested_quantity }} {{ plan.output_unit }}</p>
+    </div>
+    <span class="status status-large">Synthetic plan</span>
+  </section>
+
+  <section class="metric-grid">
+    <article class="metric-card accent"><span>Expected delivery</span><strong>{{ plan.expected_delivery_at.date() }}</strong><small>{{ plan.expected_delivery_at.isoformat() }}</small></article>
+    <article class="metric-card"><span>Requested at</span><strong>{{ plan.requested_at.date() }}</strong><small>{{ plan.requested_at.isoformat() }}</small></article>
+    <article class="metric-card"><span>Provider orders</span><strong>{{ plan.provider_orders|length }}</strong><small>Material POs + process work orders</small></article>
+  </section>
+
+  <section class="panel detail-panel">
+    <div class="panel-heading"><h2>Critical path</h2><span>Determines delivery</span></div>
+    <p class="critical-path">{% for node_id in plan.critical_path_node_ids %}<code>{{ node_id }}</code>{% if not loop.last %}<span>→</span>{% endif %}{% endfor %}</p>
+  </section>
+
+  <section class="panel table-panel stage-panel">
+    <div class="panel-heading"><h2>Provider orders</h2><span>{{ plan.provider_orders|length }} generated</span></div>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Order</th><th>Type</th><th>Provider</th><th>Node / ETO capability</th><th>Quantity</th><th>Release</th><th>Complete</th><th>Depends on</th></tr></thead>
+      <tbody>{% for order in plan.provider_orders %}<tr>
+        <td><code>{{ order.provider_order_id }}</code></td><td>{{ order.order_type|replace('_', ' ') }}</td><td>{{ order.provider_id }}</td><td>{{ order.node_name }}<small>{{ order.node_id }} · {{ order.capability_id or "No ETO capability" }}</small></td>
+        <td class="number">{{ order.quantity }} {{ order.unit }}</td><td><time>{{ order.release_at.isoformat() }}</time></td><td><time>{{ order.expected_completion_at.isoformat() }}</time></td>
+        <td>{% if order.depends_on_provider_order_ids %}{{ order.depends_on_provider_order_ids|join(', ') }}{% else %}<span class="missing">None</span>{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section class="panel table-panel stage-panel">
+    <div class="panel-heading"><h2>Node schedule</h2><span>All graph nodes</span></div>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Node</th><th>Kind</th><th>Demand</th><th>Elapsed</th><th>Start</th><th>Finish</th><th>Path</th></tr></thead>
+      <tbody>{% for node in plan.node_plans %}<tr>
+        <td>{{ node.name }}<small>{{ node.node_id }}</small></td><td>{{ node.kind }}</td><td class="number">{{ node.demanded_quantity }} {{ node.unit }}</td><td>{{ node.elapsed_days }} days</td>
+        <td><time>{{ node.start_at.isoformat() }}</time></td><td><time>{{ node.finish_at.isoformat() }}</time></td><td>{% if node.critical_path %}<span class="status status-delivered">Critical</span>{% else %}<span class="missing">Parallel</span>{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section class="panel detail-panel stage-panel">
+    <div class="panel-heading"><h2>Assumptions and provenance</h2><span>{{ plan.planner_version }}</span></div>
+    <ul class="assumption-list">{% for assumption in plan.assumptions %}<li>{{ assumption }}</li>{% endfor %}</ul>
+    <dl class="provenance"><div><dt>Recipe SHA-256</dt><dd>{{ plan.product_config_sha256 }}</dd></div><div><dt>Generated at</dt><dd>{{ plan.generated_at.isoformat() }}</dd></div><div><dt>Schema</dt><dd>{{ plan.schema_version }}</dd></div></dl>
+  </section>
+{% endblock %}

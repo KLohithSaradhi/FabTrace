@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Products · FabTrace{% endblock %}
+{% block content %}
+  <section class="hero compact">
+    <div>
+      <p class="eyebrow">Product configuration</p>
+      <h1>Design the recipe.</h1>
+      <p class="lede">Build dependencies visually, validate the graph, then publish an immutable version for planning.</p>
+    </div>
+    <a class="button-link" href="/products/new">Create product</a>
+  </section>
+
+  <section class="product-catalog">
+    {% for product in products %}
+      <article class="panel product-summary-card">
+        <div>
+          <p class="eyebrow">{{ product.product_id }}</p>
+          <h2>{{ product.product_name }}</h2>
+        </div>
+        <dl>
+          <div><dt>Draft</dt><dd>{{ "Available" if product.has_draft else "None" }}</dd></div>
+          <div><dt>Latest version</dt><dd>{% if product.latest_version %}v{{ product.latest_version }}{% else %}Not published{% endif %}</dd></div>
+          <div><dt>Last updated</dt><dd>{{ product.latest_updated_at or "—" }}</dd></div>
+        </dl>
+        <div class="card-actions">
+          <a class="button-link secondary" href="/products/{{ product.product_id }}/edit">Open designer</a>
+          {% if product.latest_version %}
+            <a class="button-link" href="/plans/new?product_id={{ product.product_id }}&amp;product_version={{ product.latest_version }}">Plan order</a>
+          {% endif %}
+        </div>
+      </article>
+    {% else %}
+      <div class="panel empty-state">
+        <strong>No products configured yet.</strong>
+        <span>Create a product to start drawing its dependency graph.</span>
+      </div>
+    {% endfor %}
+  </section>
+{% endblock %}

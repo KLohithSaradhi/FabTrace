@@ -1,0 +1,636 @@
+FABTRACE DESIGN TRADEOFF LOG
+============================
+
+Purpose
+-------
+This is the append-only rationale record for major FabTrace design decisions.
+It was created on 2026-10-04 and contains a best-effort retrospective of the
+tradeoffs considered before the file existed.
+
+log.txt records what was decided and its approval status. This file records why
+an option was selected, what it costs, and when it should be reconsidered.
+
+Future entries must include a stable ID, related decision IDs, context, realistic
+alternatives, selected option, benefits, disadvantages/risks, and a revisit
+trigger. Do not delete or rewrite old analysis. Append a new entry when later
+evidence changes the conclusion.
+
+
+[T-001]
+Date: 2026-10-04
+Related decisions: D-003, D-004
+Context: FabTrace begins with data and code from the eto-chip-explorer project.
+Alternatives considered:
+1. Modify eto-chip-explorer directly.
+2. Read data live from the sibling repository.
+3. Keep FabTrace separate and copy the required source snapshots.
+Selected option: Keep a separate FabTrace repository and copy the five required
+CSV files into Data/.
+Benefits: Isolates experimental application work, makes the project portable,
+and gives runs a stable source snapshot.
+Disadvantages and risks: Copied data can drift from upstream and requires an
+explicit refresh/provenance process.
+Revisit when: Automated upstream refresh or multi-version source snapshots are
+needed.
+
+[T-002]
+Date: 2026-10-04
+Related decisions: D-005, D-010
+Context: ETO contains research relationships but lacks operational order data.
+Alternatives considered:
+1. Add synthetic columns directly to the ETO CSVs.
+2. Infer operational characteristics from market share.
+3. Preserve immutable source facts and layer synthetic operational data on top.
+Selected option: Keep source and synthetic data separate and explicitly marked.
+Benefits: Protects provenance, prevents fabricated operational claims, and makes
+simulation assumptions replaceable and testable.
+Disadvantages and risks: Requires more joins, metadata, and care in every layer.
+Revisit when: A trustworthy operational dataset is introduced; even then,
+provenance boundaries should remain.
+
+[T-003]
+Date: 2026-10-04
+Related decisions: D-009, D-010, D-011
+Context: The first milestone needs reliable parsing and validation of five small
+CSV tables.
+Alternatives considered:
+1. Pandas or Polars dataframes.
+2. Load immediately into a relational database or DuckDB.
+3. Use Python's CSV parser with typed Pydantic in-memory models.
+Selected option: Standard CSV parsing plus Pydantic models and cross-table
+validation.
+Benefits: Minimal dependencies, explicit schemas, easy tests, and enough scale
+for the current dataset.
+Disadvantages and risks: In-memory models and Python loops will not suit large
+datasets or analytical queries; normalization is application code rather than
+SQL.
+Revisit when: Data volume, ad hoc analysis, incremental loading, or persistence
+requirements make a database/dataframe engine materially useful.
+
+[T-004]
+Date: 2026-10-04
+Related decisions: D-006
+Context: Agents need both project-wide constraints and component-specific
+instructions.
+Alternatives considered:
+1. Put all instructions into one large AGENTS.md.
+2. Create one catch-all FabTrace skill.
+3. Keep shared governance in AGENTS.md and use narrow component skills.
+Selected option: Repository-wide AGENTS.md plus seven narrowly routed skills.
+Benefits: Reduces irrelevant context and keeps component workflows focused while
+preserving common invariants.
+Disadvantages and risks: Guidance is distributed and can become inconsistent if
+shared rules are duplicated.
+Revisit when: Skill boundaries repeatedly overlap or component contracts become
+stable enough to consolidate.
+
+[T-005]
+Date: 2026-10-04
+Related decisions: D-008
+Context: Provider simulation depends on trustworthy provider/capability data.
+Alternatives considered:
+1. Prototype provider messages first with hard-coded identities.
+2. Build the dashboard first.
+3. Validate source data and establish a reusable catalog first.
+Selected option: Build source ingestion and validation before the simulator.
+Benefits: Simulator configurations fail early on invalid IDs and retain source
+provenance from the start.
+Disadvantages and risks: Delays visible simulation output and can overinvest in
+data infrastructure if the source contract changes.
+Revisit when: Rapid UI prototyping is needed; prototypes must still be clearly
+disposable and must not bypass production validation.
+
+[T-006]
+Date: 2026-10-04
+Related decisions: D-013
+Context: The first vertical slice needs a provider/capability pair with clear
+purchase-order semantics.
+Alternatives considered:
+1. ASML supplying lithography equipment.
+2. Applied Materials supplying fabrication tools.
+3. Shin-Etsu supplying wafers.
+Selected option: Use P208 Shin-Etsu and N26 Wafer through a synthetic provider
+profile and display name.
+Benefits: Wafers are consumables, so quantity, production, quality, shipment,
+and delivery fit a simple purchase order.
+Disadvantages and risks: The real organization is only a source identity; users
+could still mistake synthetic performance for a real-world claim.
+Revisit when: The UI is introduced. It must visually distinguish the synthetic
+provider instance from the source organization.
+
+[T-007]
+Date: 2026-10-04
+Related decisions: D-014
+Context: Many simulated providers need independent behavior and accelerated time.
+Alternatives considered:
+1. One operating-system thread or container per provider.
+2. asyncio tasks driven by wall-clock time.
+3. SimPy discrete-event processes with a virtual clock.
+Selected option: SimPy with one virtual-time unit per simulated day.
+Benefits: Fast deterministic runs, simple causal waiting, low resource use, and
+no real-time test delays.
+Disadvantages and risks: SimPy is an additional abstraction/dependency and does
+not reproduce real network/process failures by itself.
+Revisit when: Testing distributed deployment or transport failure becomes an
+explicit learning objective.
+
+[T-008]
+Date: 2026-10-04
+Related decisions: D-014, D-016
+Context: Provider communications should be varied eventually, but facts must be
+testable and reproducible first.
+Alternatives considered:
+1. Generate free-form text independently of simulator state.
+2. Use an LLM for every update immediately.
+3. Generate structured truth first and render deterministic templates.
+Selected option: Structured ground truth followed by deterministic message
+templates.
+Benefits: Guarantees causal consistency, enables exact extraction evaluation,
+and has no API cost or nondeterminism.
+Disadvantages and risks: Early messages are formulaic and easier to parse than
+real communications.
+Revisit when: The extraction baseline works. Add controlled ambiguity or
+approved LLM paraphrasing while retaining ground truth and drift tests.
+
+[T-009]
+Date: 2026-10-04
+Related decisions: D-015
+Context: User configuration, resolved source facts, and runtime metadata have
+different reproducibility properties.
+Alternatives considered:
+1. Store everything in one scenario JSON file.
+2. Generate only event outputs and rely on the current source files.
+3. Split reusable provider profiles, scenarios, deterministic effective config,
+and an operational run manifest.
+Selected option: Four-layer configuration/provenance model under .fabtrace/.
+Benefits: Reusable profiles, self-contained effective inputs, source hashes,
+country enrichment, and reproducible logical outputs without hiding actual run
+metadata.
+Disadvantages and risks: More files and schemas; users must understand authored
+versus generated configuration.
+Revisit when: A configuration UI or registry is introduced. Preserve exportable
+effective snapshots even if authoring moves elsewhere.
+
+[T-010]
+Date: 2026-10-04
+Related decisions: D-015, D-016
+Context: The first simulator needs durable inspectable outputs but no streaming
+consumer exists yet.
+Alternatives considered:
+1. Publish directly to Kafka/Redpanda.
+2. Write immediately to a relational database.
+3. Write separate JSONL truth and provider-message streams locally.
+Selected option: Local JSONL streams in a run-specific directory.
+Benefits: Human-readable, append-friendly, easy to replay, and no infrastructure
+setup; establishes event boundaries before choosing transport.
+Disadvantages and risks: No concurrent consumers, retention policy, partitions,
+backpressure, or delivery guarantees.
+Revisit when: The ingestion-pipeline milestone begins and a real consumer needs
+transport semantics.
+
+[T-011]
+Date: 2026-10-04
+Related decisions: D-015
+Context: Re-running the same scenario and seed could destroy evidence from an
+earlier execution.
+Alternatives considered:
+1. Overwrite automatically.
+2. Append into existing files.
+3. Refuse to start when the deterministic run directory already exists.
+Selected option: Refuse overwrite.
+Benefits: Prevents accidental data loss and mixed runs; forces intentional
+archival, deletion, or a new scenario/seed.
+Disadvantages and risks: Less convenient during rapid iteration and run IDs can
+collide even when code or source data changes.
+Revisit when: A content-addressed or unique execution-ID scheme is approved.
+
+[T-012]
+Date: 2026-10-04
+Related decisions: D-013, D-014, D-016
+Context: The full project ultimately needs many providers and failure modes.
+Alternatives considered:
+1. Build multiple providers, incidents, orders, and streaming at once.
+2. Build a single deterministic happy-path vertical slice.
+Selected option: One provider, one capability, one order, and one successful
+delivery before exceptional scenarios.
+Benefits: Proves source resolution, configuration, state transitions, event
+linkage, persistence, and tests with a small debuggable surface.
+Disadvantages and risks: Does not yet demonstrate meaningful risk, ETA revision,
+competition for capacity, or multi-provider dependency behavior.
+Revisit when: This vertical slice passes end-to-end tests, which it now does;
+the next approved slice should add one causal failure scenario.
+
+[T-013]
+Date: 2026-10-04
+Related decisions: D-018
+Context: A learning project needs enough handoff detail for the user to rerun,
+inspect, and understand each completed stage.
+Alternatives considered:
+1. Report only that implementation is complete.
+2. Provide test results without reproducible user commands.
+3. Provide a structured stage summary, copy-paste commands, expected outcomes,
+and separate evidence of commands already verified.
+Selected option: Require the structured stage-completion handoff.
+Benefits: Improves reproducibility, reinforces the concepts learned in each
+stage, and makes environment or behavior regressions easier to identify.
+Disadvantages and risks: Handoffs are longer and can become repetitive if they
+copy generic setup instructions without adapting them to the stage.
+Revisit when: A project task runner or automated report can generate accurate
+stage-specific commands and results; retain the learning summary even then.
+
+[T-014]
+Date: 2026-10-04
+Related decisions: D-019
+Context: The simulator needs its first disruption to demonstrate causal ETA
+revision and incident communications.
+Alternatives considered:
+1. Generate equipment failures randomly from a probability distribution.
+2. Add quality rework as the first exceptional scenario.
+3. Configure one explicit equipment failure at a known production point.
+Selected option: Use an explicit equipment failure after one production day with
+two days of configured downtime.
+Benefits: The timeline, state transitions, ETA change, and message facts are
+fully reproducible and hand-computable, making the behavior easy to learn and
+test.
+Disadvantages and risks: It does not yet exercise probability, provider
+reliability profiles, multiple incidents, or uncertainty in repair duration.
+Revisit when: Deterministic incident contracts and extraction tests are stable;
+then add seeded stochastic incident generation without removing explicit
+scenarios used as regression fixtures.
+
+[T-015]
+Date: 2026-10-04
+Related decisions: D-020
+Context: Provider disruptions should become stochastic without making tests or
+existing orders sensitive to unrelated simulation changes.
+Alternatives considered:
+1. Use one global pseudorandom generator for an entire run.
+2. Use nondeterministic system randomness.
+3. Derive a separate deterministic random stream for each order from stable
+scenario, provider, order, and stream-version identifiers.
+Selected option: Use independent SHA-256-derived seeds with local
+random.Random instances, configured weighted distributions, and private audit
+fields.
+Benefits: Runs are reproducible; unrelated ordering changes do not shift an
+order's draws; explicit fixtures remain available; stochastic decisions can be
+audited against their configured threshold and sampled outcomes.
+Disadvantages and risks: Python's pseudorandom algorithm and sampling procedure
+become part of the reproducibility contract; the deliberately high teaching
+probability is not statistically calibrated to real suppliers; limiting one
+failure per order understates real complexity.
+Revisit when: Cross-language reproducibility, calibrated historical data,
+multiple correlated failures, or formal Monte Carlo analysis becomes a
+requirement. Version the stream algorithm before changing it.
+
+[T-016]
+Date: 2026-10-04
+Related decisions: D-021
+Context: Provider-message output now needs durable raw retention and replayable
+ingestion before natural-language extraction can be evaluated reliably.
+Alternatives considered:
+1. Introduce Kafka/Redpanda and PostgreSQL immediately.
+2. Use DuckDB as both the ingestion store and future analytical engine.
+3. Use standard-library SQLite for a bounded local ingestion stage.
+Selected option: SQLite with append-only accepted, quarantine, and ingestion-
+batch tables, fed by a batch JSONL CLI.
+Benefits: Teaches SQL constraints, transactions, idempotency, quarantine, and
+replay without services or dependencies; exact source bytes and ingestion
+metadata remain queryable together.
+Disadvantages and risks: SQLite is single-node, concurrent writers serialize,
+and batch files do not teach broker partitions, consumer groups, backpressure,
+or distributed recovery. Reusing it for analytics could blur raw and derived
+storage responsibilities.
+Revisit when: Multiple producers or consumers must run concurrently, event
+volume makes local batches impractical, or the extraction/analytics layer needs
+an independently scalable database. Preserve the event contract and replay
+tests during any migration.
+
+[T-017]
+Date: 2026-10-07
+Related decisions: D-022
+Context: Raw provider messages must become structured, evidence-backed facts
+without leaking private simulator truth into the extraction process.
+Alternatives considered:
+1. Start with an external LLM/API and structured-output prompting.
+2. Store one wide, mutable current-state row per order.
+3. Establish a deterministic rule baseline that emits immutable typed claims,
+then evaluate it through a separate ground-truth path.
+Selected option: Versioned rules-v1 extraction with one row per claim, exact
+source spans, confidence 1.0 only for exact patterns, explicit abstention/review,
+and post-extraction field-level evaluation.
+Benefits: Results are reproducible, cheap, explainable, provenance-rich, and
+safe from ground-truth leakage; append-only versions enable fair comparison with
+future rules or models; separate claims can represent multi-fact messages.
+Disadvantages and risks: Template-oriented rules have poor language coverage,
+confidence 1.0 describes rule certainty rather than real-world truth, and an
+entity-attribute-value claim table requires downstream reconciliation and more
+complex queries. Using the same SQLite database separates layers logically but
+does not provide physical isolation.
+Revisit when: Provider language gains meaningful paraphrase diversity or the
+rules baseline is stable enough for a controlled LLM comparison. Preserve the
+same claim/evaluation contract and use scenario-disjoint evaluation data.
+
+[T-018]
+Date: 2026-10-07
+Related decisions: D-023
+Context: Versioned claims can be individually correct while arriving late,
+repeating prior values, contradicting an envelope, or implying an illegal order
+state transition. Downstream metrics need reproducible state as it was known at
+each observation time.
+Alternatives considered:
+1. Update one mutable current-order row in place.
+2. Select the claim with the greatest provider sent time for every field without
+validating state transitions or arrival history.
+3. Build append-only snapshots in received-time order, retain sent-time field
+validity and provenance, and expose current state through a view.
+Selected option: Append-only bitemporal-style order-state-v1 snapshots with
+per-message applied, stale, or conflict decisions and a derived current view.
+Benefits: Historical knowledge can be reconstructed; late data cannot silently
+regress state; every displayed field remains traceable to a claim and raw
+message; replay is deterministic and idempotent.
+Disadvantages and risks: Wide snapshots duplicate unchanged values, SQLite is
+not optimized for large temporal workloads, strict same-time conflicts may need
+domain-specific correction semantics, and current state is still only what the
+provider reported rather than an independently predicted truth.
+Revisit when: Human correction workflows, multiple extractor versions,
+multi-provider orders, rework loops, or event volume require richer conflict
+resolution, valid-time intervals, or a dedicated analytical store.
+
+[T-019]
+Date: 2026-10-07
+Related decisions: D-024
+Context: Reconciled order history can support useful operational analytics, but
+metric computation can leak future observations or hide missing evidence if its
+time and null semantics are implicit.
+Alternatives considered:
+1. Compute only mutable current metrics using wall-clock time.
+2. Introduce a single weighted red/amber/green risk score immediately.
+3. Require an explicit as-of time and persist versioned, decomposed metric
+snapshots with their source state.
+Selected option: Manual, as-of-safe operational-metrics-v1 snapshots containing
+separate schedule, progress, freshness, latency, and data-quality signals.
+Benefits: Historical results are reproducible; definitions are hand-checkable;
+missing evidence stays visible; dashboard consumers receive a stable grain; no
+future information enters a historical metric.
+Disadvantages and risks: Snapshot storage duplicates values, progress velocity
+from two points is noisy, provider forecast drift is not an independent ETA
+prediction, and message conflict counts indicate data quality rather than
+business risk. Manual refresh is not real-time orchestration.
+Revisit when: Multiple orders and providers supply enough observations for
+backtesting, probabilistic ETA calibration, or an explicitly weighted risk
+model. Validate each new model against a transparent baseline before adoption.
+
+[T-020]
+Date: 2026-10-11
+Related decisions: D-025
+Context: FabTrace needs an inspectable dashboard and stable read interface over
+SQLite state and metric snapshots without prematurely creating a second
+application platform.
+Alternatives considered:
+1. Build a React single-page application plus a standalone JSON backend.
+2. Use Streamlit for the shortest path to interactive charts.
+3. Use FastAPI with Jinja-rendered HTML and HTMX progressive enhancement over a
+versioned read-only JSON API.
+Selected option: FastAPI, Jinja, and HTMX with a read-only SQLite repository and
+one deployable Python application.
+Benefits: The project gains explicit API contracts, testable SQL boundaries,
+server-rendered pages, and lightweight interaction without Node tooling or a
+separate frontend deployment. HTML remains readable if HTMX is unavailable.
+Disadvantages and risks: Server templates couple presentation to the Python
+service, HTMX is less suitable for highly stateful interfaces, SQLite reads can
+contend with future writers, and a CDN-loaded enhancement may be unavailable
+offline. The local server has no production security or scaling guarantees.
+Revisit when: The UI needs complex client-side state or visualization, multiple
+concurrent users create measurable database contention, an offline asset policy
+is required, or deployment requires authentication and independent frontend
+release cycles.
+
+[T-021]
+Date: 2026-10-11
+Related decisions: D-026
+Context: Product dependency graphs must be easy for a user to author while
+remaining safe, versionable configuration for deterministic planning.
+Alternatives considered:
+1. Require users to edit a node table and edge table or raw JSON directly.
+2. Build a React/React Flow application with a separate frontend toolchain.
+3. Embed Cytoscape.js in the existing server-rendered application and persist a
+flat recipe map generated by the editor.
+Selected option: A Cytoscape.js 3.34.3 graph canvas with Jinja-rendered controls,
+plain browser JavaScript, server-side Pydantic validation, mutable drafts, and
+immutable published versions.
+Benefits: Users manipulate the graph directly; no Node build system or second
+deployment is introduced; the persisted recipe is human-readable; Cytoscape
+provides mature selection, pan, zoom, layout, add, and removal primitives; and
+publication creates an auditable boundary.
+Disadvantages and risks: Editor behavior requires custom JavaScript, the CDN is
+an online runtime dependency, very large graphs may overwhelm a single-page
+property panel, draft files are mutable by design, and local write endpoints
+increase the security sensitivity of the development server.
+Revisit when: Offline operation requires vendored assets, graph editing needs
+advanced handles or collaborative changes, product graphs become large enough
+to require search or subgraphs, or authentication and multi-user concurrency
+become requirements.
+
+[T-022]
+Date: 2026-10-11
+Related decisions: D-027
+Context: Published product graphs need to become explainable provider orders
+and delivery expectations before simulation can execute multi-node products.
+Alternatives considered:
+1. Sum every configured duration into one lead-time estimate and emit provider
+orders without dependency dates.
+2. Introduce inventory, capacity optimization, yield, batching, and stochastic
+forecasting immediately.
+3. Use deterministic quantity propagation and DAG forward scheduling with
+explicit synthetic lead times, durations, ordered provider candidates, and a
+recorded critical path.
+Selected option: Planner-v1 uses edge quantities per dependent unit, sums shared
+demand, selects the first provider candidate, schedules parallel branches by
+their maximum prerequisite finish, and persists an immutable JSON plan.
+Benefits: Results are reproducible, traceable to one published recipe hash,
+easy to verify by hand, and structured for later simulator input. The critical
+path explains rather than hides the delivery date.
+Disadvantages and risks: First-candidate selection is not optimization; node
+durations ignore quantity, capacity, calendars, and transport; separate orders
+may be commercially inefficient; floating quantities do not model yield or
+batch rounding; and the expected date is a deterministic scenario result, not
+a calibrated real-world forecast.
+Revisit when: Provider simulation consumes generated orders, real capacity or
+inventory semantics exist, commercial consolidation matters, or enough
+historical observations exist to evaluate probabilistic ETA models against
+planner-v1.
+
+[T-023]
+Date: 2026-10-11
+Related decisions: D-029
+Context: Immutable planner output must drive several provider behaviors while
+preserving causal dependencies, reproducibility, and compatibility with the
+existing provider-message ETL contracts.
+Alternatives considered:
+1. Start an OS thread or process per provider order and coordinate with wall
+clock sleeps.
+2. Create a distributed agent service and broker before local semantics are
+stable.
+3. Run one SimPy coroutine per provider order on a shared virtual clock, with
+dependency events and stable order-local random streams.
+Selected option: Shared-clock SimPy actors consume plan dependencies and
+release times. A separate execution-scenario file supplies profiles and
+stochastic controls, while provider and capability mappings are validated
+against ETO data. Purchase and work orders share the existing lifecycle;
+DELIVERED means physical receipt for materials and output handoff for work.
+Benefits: Concurrent branches and delay propagation remain deterministic and
+fast; existing event, message, ingestion, extraction, and reconciliation
+schemas remain usable; configuration and plan provenance stay separate; and
+the same plan can be replayed under different explicit seeds.
+Disadvantages and risks: Actors do not consume real compute independently;
+provider capacity is still per-order rather than a shared constrained resource;
+the common lifecycle slightly overloads shipping/delivery vocabulary for work
+orders; and strict ETO/profile matching prevents ad hoc product nodes from
+executing until profiles are configured.
+Revisit when: Shared provider queues or capacity contention are modeled,
+real-time or distributed execution becomes a learning objective, work-order
+handoffs need their own downstream state vocabulary, or custom non-ETO
+capabilities require a governed synthetic registry.
+
+[T-024]
+Date: 2026-10-11
+Related decisions: D-033
+Context: Product authors need provider candidates that are traceable to ETO
+provision relationships without manually searching CSV files or mistaking
+source presence for a provider score.
+Alternatives considered:
+1. Keep a free-text field and require manual provider-ID lookup.
+2. Copy the provider catalog into browser JavaScript or a second mutable store.
+3. Expose a narrow read-only source API and populate the existing editable
+field from organization relationships for the selected ETO reference.
+Selected option: Server-side source lookup with lazy validated catalog loading,
+organization-only filtering, deterministic provider-ID ordering, visible names
+and countries, and an editable ID list.
+Benefits: IDs and aliases remain centrally normalized; the immutable CSVs stay
+untouched; the UI avoids shipping the whole catalog; tests can enforce country
+exclusion and null-share semantics; and manual override remains possible.
+Disadvantages and risks: Provider-ID order is arbitrary business priority, a
+large capability list can be unwieldy in a comma-separated field, source
+relationships do not guarantee current commercial or execution availability,
+and changing the ETO reference replaces manual ordering after confirmation by
+the field change.
+Revisit when: Candidate counts require search or multi-select controls,
+provider selection gains explicit scoring or qualification rules, source data
+needs refresh without server restart, or execution-profile availability should
+be displayed as a separate readiness signal.
+
+[T-025]
+Date: 2026-10-11
+Related decisions: D-034
+Context: Product authors should not invent material lead times, but Planner v1
+currently reads a required recipe-level lead_time_days value when it builds a
+deterministic schedule.
+Alternatives considered:
+1. Keep asking users for a synthetic lead time in the product editor.
+2. Remove the field from the schema and planner immediately, requiring a new
+provider timing model and migration in the same UI change.
+3. Remove the authoring control now while retaining an explicitly documented
+one-day compatibility value until provider-derived scheduling is designed.
+Selected option: Remove the UI control and preserve the internal Planner v1
+compatibility value, including normalizing legacy drafts that lack it.
+Benefits: The product-authoring model stops assigning an operational estimate
+to users; existing drafts, publication validation, immutable versions, and
+plans remain compatible; and the later timing model can be designed around
+actual order context.
+Disadvantages and risks: Recipe JSON still contains a quantity-independent
+placeholder, Planner v1 ETAs remain unrealistic, and hiding that legacy field
+could be mistaken for having already implemented provider-derived estimates.
+Documentation therefore labels it as a compatibility value rather than a
+forecast.
+Revisit when: Provider profiles expose approved queue, capacity, processing,
+quality, and transport timing semantics, at which point remove the legacy
+recipe field and migrate planning to an order-specific estimate.
+
+[T-026]
+Date: 2026-10-11
+Related decisions: D-036
+Context: Plan-generated purchase and work orders are retained as raw messages,
+but rules-v1 recognizes only legacy PO-prefixed references and order-state-v1
+is permanently coupled to those claims. The dashboard must expose corrected
+state without erasing earlier extraction or reconciliation history.
+Alternatives considered:
+1. Broaden rules-v1 and silently reinterpret its historical version.
+2. Display raw provider messages or simulator ground truth directly as current
+order state.
+3. Append rules-v2 claims, reconcile them with order-state-v2, and make the
+dashboard prefer v2 while retaining a v1 fallback.
+Selected option: A deterministic version pair with an explicit one-to-one
+mapping (`rules-v1` to `order-state-v1`, `rules-v2` to `order-state-v2`) and
+version-aware dashboard selection at provider-order grain.
+Benefits: Old results remain reproducible; previously conflicted messages can
+be replayed safely under a new reconciliation identity; extraction remains
+explainable and evaluation-safe; and deployments can transition without making
+all v1-only orders disappear.
+Disadvantages and risks: Exact template rules still have narrow language
+coverage; the legacy `purchase_order_id` column also stores work-order IDs;
+work handoff reuses shipping-oriented lifecycle states; and users must run
+three explicit ETL commands before dashboard state and metrics appear.
+Revisit when: Provider prose gains controlled paraphrase diversity, order type
+needs a first-class normalized field, customer-order rollup is implemented, or
+an orchestrator is added after the batch contracts are stable.
+
+[T-027]
+Date: 2026-10-11
+Related decisions: D-038
+Context: Immutable plan JSON and reconciled provider-order state live in
+separate stores, while users need one customer-order view that preserves
+dependencies, planned dates, and evidence without mixing quantities in unlike
+units.
+Alternatives considered:
+1. Parse plan files directly inside every dashboard request and infer joins from
+provider-order ID text.
+2. Copy a single mutable customer status row into SQLite and average provider
+progress percentages.
+3. Explicitly register the immutable plan graph and derive a versioned
+customer-order projection from planned identities plus reconciled state.
+Selected option: Schema-v5 append-only plan registration with exact-byte hash
+idempotency and a customer-order-v1 backend projection at customer-order and
+execution-scenario grain.
+Benefits: Referential joins no longer rely on ID parsing; source plan bytes and
+fingerprint remain auditable; plan-only orders are visible; multiple scenarios
+stay separate; provider evidence remains drillable; and completion counts avoid
+invalid cross-unit arithmetic.
+Disadvantages and risks: Registration is an extra manual step; exact-byte hashes
+treat formatting-only changes as different content; query-time projection is
+suited to local scale rather than a warehouse; terminal maximum forecast is a
+simple transparent rollup rather than dependency-aware probabilistic ETA; and
+work orders still occupy the legacy purchase_order_id execution column.
+Revisit when: Registration should be transactionally coupled to planning, plan
+volumes justify materialized snapshots, order type becomes first-class in the
+execution schema, or calibrated delivery forecasting is approved.
+
+[T-028]
+Date: 2026-10-11
+Related decisions: D-040
+Context: Running six explicit commands teaches each ETL boundary but makes
+normal execution and recovery error-prone, while the project is still a local
+learning system with one SQLite database and deterministic batch inputs.
+Alternatives considered:
+1. Keep only manual commands and leave sequencing, cutoffs, and retries to the
+operator.
+2. Add Prefect, Dagster, or Airflow now and move run state into that framework.
+3. Add a thin synchronous coordinator that calls existing Python boundaries and
+records immutable checkpoints in FabTrace SQLite.
+Selected option: A local execute-plan-v1 coordinator with a deterministic input
+fingerprint, immutable run identity, append-only run/stage events, validated
+simulation reuse, fail-fast sequencing, and latest scenario received time as
+the analytics cutoff.
+Benefits: The learning surface includes orchestration and observability without
+a service deployment; business rules remain in their existing modules; exact
+input/version provenance makes retries explainable; and failed stages can be
+retried without rerunning completed upstream work.
+Disadvantages and risks: Execution is synchronous and single-process; a hard
+process kill leaves a started attempt without a terminal event; SQLite is not a
+distributed scheduler; filesystem artifacts can still be externally removed;
+scenario-wide extraction and analytics may include several customer orders;
+and deriving the cutoff from the latest retained message is reproducible but
+not a user-selected historical view.
+Revisit when: Scheduled or concurrent runs, remote workers, backfills, per-order
+partitions, explicit historical cutoffs, alerting, or cross-machine execution
+become requirements. At that point compare Prefect, Dagster, and Airflow using
+the retained execute-plan contract as the migration boundary.

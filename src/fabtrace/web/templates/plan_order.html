@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Plan {{ recipe.product_name }} · FabTrace{% endblock %}
+{% block content %}
+  <a class="back-link" href="/products">← Product catalog</a>
+  <section class="hero compact">
+    <div>
+      <p class="eyebrow">Plan order · {{ recipe.product_id }} v{{ recipe.product_version }}</p>
+      <h1>{{ recipe.product_name }}</h1>
+      <p class="lede">Create an immutable deterministic plan. Reusing an order ID is intentionally rejected.</p>
+    </div>
+  </section>
+
+  <section class="plan-create-grid">
+    <form id="plan-order-form" class="panel plan-form" data-product-id="{{ recipe.product_id }}" data-product-version="{{ recipe.product_version }}">
+      <div>
+        <label for="order-id">Customer order ID</label>
+        <input id="order-id" name="order_id" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,63}" placeholder="ORDER-0001" required>
+      </div>
+      <div>
+        <label for="quantity">Output quantity ({{ recipe.nodes[recipe.output_node_id].unit }})</label>
+        <input id="quantity" name="quantity" type="number" min="0" step="any" value="1" required>
+      </div>
+      <div>
+        <label for="requested-at">Requested at</label>
+        <input id="requested-at" name="requested_at" placeholder="2026-01-05T00:00:00Z" required>
+        <small>Use an ISO 8601 timestamp with Z or an explicit timezone offset.</small>
+      </div>
+      <button type="submit">Generate immutable plan</button>
+      <p id="plan-form-status" class="form-status" role="status" aria-live="polite"></p>
+    </form>
+    <aside class="panel plan-explainer">
+      <p class="eyebrow">Planner contract</p>
+      <h2>What this computes</h2>
+      <ul>
+        <li>Recursive quantities from dependency-edge ratios</li>
+        <li>One PO per material and one work order per process</li>
+        <li>First configured provider candidate</li>
+        <li>Parallel dependency schedule and critical path</li>
+      </ul>
+      <p>Capacity, inventory, transport, batching, yield, cost, and uncertainty are intentionally outside planner-v1.</p>
+    </aside>
+  </section>
+  <section id="plan-result" class="panel plan-result" hidden></section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', path='/plan-order.js') }}"></script>{% endblock %}

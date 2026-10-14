@@ -1,0 +1,753 @@
+FABTRACE DECISION LOG
+=====================
+
+Purpose
+-------
+This is the append-only record of material FabTrace decisions. It was created
+on 2026-10-04 and includes a best-effort reconstruction of decisions made before
+the log existed.
+
+Future entries must include a stable ID, date, status, decision, rationale, and
+consequences. Do not delete or rewrite an old decision when direction changes.
+Append a new entry with status SUPERSEDED and reference the earlier decision.
+Unresolved proposals belong in the PENDING section and are not authorization to
+implement them.
+
+
+DECISIONS
+---------
+
+[D-001]
+Date: 2026-10-04
+Status: APPROVED
+Decision: The project is named FabTrace.
+Rationale: The name connects semiconductor fabrication with end-to-end tracing
+of orders, events, transformations, and forecasts.
+Consequences: The repository, Python package, CLI, and project-local skills use
+the FabTrace/fabtrace name.
+
+[D-002]
+Date: 2026-10-04
+Status: APPROVED
+Decision: FabTrace will be an event-driven semiconductor supply-chain digital
+twin and control tower for learning data engineering.
+Rationale: The project should cover realistic ingestion, ETL, event processing,
+data quality, analytical modeling, forecasting, and observability through one
+coherent supply-chain problem.
+Consequences: Users will eventually configure product dependencies and provider
+candidates, place orders, receive provider updates, and inspect progress, cost,
+quality, risk, and delivery forecasts.
+
+[D-003]
+Date: 2026-10-04
+Status: IMPLEMENTED
+Decision: FabTrace is developed in its own repository directory alongside the
+upstream eto-chip-explorer repository.
+Rationale: Application work must remain separate from the imported reference
+project.
+Consequences: Upstream code is not modified by FabTrace implementation work.
+
+[D-004]
+Date: 2026-10-04
+Status: IMPLEMENTED
+Decision: Copy the five relational ETO CSVs into the capitalized Data directory:
+stages.csv, inputs.csv, sequence.csv, providers.csv, and provision.csv. Exclude
+website image artifacts and documentation files from application source data.
+Rationale: These five tables contain the reference entities and relationships
+needed for planning and provider work.
+Consequences: Data/ is the immutable source snapshot. The copies were verified
+byte-for-byte against the ETO originals using SHA-256 checksums.
+
+[D-005]
+Date: 2026-10-04
+Status: APPROVED
+Decision: Preserve a strict boundary between ETO-sourced facts and synthetic
+operational facts.
+Rationale: ETO contains identities, capabilities, relationships, geography, and
+market information, but not operational order history, capacity, lead time,
+price, inventory, quality, or reliability.
+Consequences: Synthetic fields must be labeled and reproducible. Market share
+must not be treated as evidence of price, reliability, quality, or risk. Source
+CSV files must not be edited to fit simulation requirements.
+
+[D-006]
+Date: 2026-10-04
+Status: IMPLEMENTED
+Decision: Use AGENTS.md as the repository-wide agent contract and project-local
+.codex/skills/*/SKILL.md files for component-specific workflows.
+Rationale: Repository-wide invariants belong in one governing file, while narrow
+skills keep task routing and context focused.
+Consequences: Seven skills exist for source data, provider simulation, order
+planning, event pipelines, update extraction, supply analytics, and the control
+tower. Component skills defer to AGENTS.md.
+
+[D-007]
+Date: 2026-10-04
+Status: APPROVED
+Decision: Material technical and domain decisions require explicit user
+confirmation before implementation.
+Rationale: The user wants architecture choices to remain visible and reviewable.
+Consequences: Agents must distinguish proposals from approvals. Routine
+mechanical work within an approved decision does not require repeated approval,
+but deviations do.
+
+[D-008]
+Date: 2026-10-04
+Status: APPROVED
+Decision: Build and validate the source-data foundation before implementing the
+provider simulator.
+Rationale: Provider agents need a trustworthy provider and capability catalog.
+Consequences: The first implementation milestone is a read-only ETO loader and
+validator. Provider execution behavior remains out of scope until its contracts
+are approved.
+
+[D-009]
+Date: 2026-10-04
+Status: IMPLEMENTED
+Decision: Use Python 3.12 or newer, uv, Pydantic 2, pytest, a src/ package layout,
+and Python's standard CSV parser for the source-data milestone.
+Rationale: This is a small, typed, testable foundation without adding a
+dataframe or storage dependency before it is needed.
+Consequences: pyproject.toml declares Python >=3.12 and the approved dependencies;
+uv.lock provides reproducible resolution. The current development interpreter is
+Python 3.14.7, which satisfies the declared constraint.
+
+[D-010]
+Date: 2026-10-04
+Status: IMPLEMENTED
+Decision: The source-data layer loads immutable CSVs into validated in-memory
+models rather than selecting a database or derived storage format at this stage.
+Rationale: Cross-table semantics and data quality should be proven before a
+persistence architecture is chosen.
+Consequences: Provider aliases are aggregated under provider_id without losing
+source-row counts; provision targets may reference input or stage IDs; blank
+shares remain unknown; all cross-table references are validated.
+
+[D-011]
+Date: 2026-10-04
+Status: IMPLEMENTED
+Decision: Expose source validation as
+"fabtrace data validate --data-dir Data" and fail with a nonzero exit code for
+missing files, malformed rows, or invalid references.
+Rationale: A CLI makes the source contract observable and reusable in local
+development and future automation.
+Consequences: The current snapshot validates with 3 stages, 126 inputs, 396
+logical provider IDs from 403 rows, 1,300 provision relationships, 139 sequence
+relationships, and zero validation errors. Five automated tests pass.
+
+[D-012]
+Date: 2026-10-04
+Status: APPROVED
+Decision: Maintain this log.txt as the append-only record of all material
+project decisions.
+Rationale: Future agents and contributors need durable context and protection
+against silent architectural drift.
+Consequences: AGENTS.md requires decision-log updates in the same change as an
+approved decision. Corrections and changes must be appended and linked rather
+than erasing history.
+
+
+PENDING - NOT APPROVED
+----------------------
+
+[P-001]
+Date: 2026-10-04
+Status: PENDING
+Proposal: Use SimPy and a virtual clock for provider execution.
+Needed before approval: Confirm the simulation framework, clock semantics, and
+random-seed strategy.
+
+[P-002]
+Date: 2026-10-04
+Status: PENDING
+Proposal: Simulate organization providers rather than country records.
+Needed before approval: Select the first provider and capability and confirm how
+country records participate as metadata.
+
+[P-003]
+Date: 2026-10-04
+Status: PENDING
+Proposal: Start with one provider, one capability, and one purchase order, then
+emit separate linked ground-truth and natural-language JSONL streams.
+Needed before approval: Confirm the lifecycle states, event types, event/message
+schemas, output paths, and initial scenario.
+
+[P-004]
+Date: 2026-10-04
+Status: PENDING
+Proposal: Defer Kafka/Redpanda, databases, orchestration, LLM extraction, Spark,
+Kubernetes, cloud infrastructure, analytics, and dashboard implementation until
+their milestones and contracts are explicitly approved.
+Needed before approval: Decide each component only when the preceding thin
+vertical slice demonstrates the requirement.
+
+
+APPROVALS RESOLVING PENDING ITEMS
+---------------------------------
+
+[D-013]
+Date: 2026-10-04
+Status: APPROVED
+Resolves: P-002 and part of P-003
+Decision: The first simulation uses organization provider P208 (Shin-Etsu) and
+its ETO provision relationship to material resource N26 (Wafer) for synthetic
+purchase order PO-0001 for 100 wafers.
+Rationale: A consumable material gives the first purchase order clear semantics
+without treating reusable fabrication equipment as a per-order purchase.
+Consequences: Provider identity, organization type, country code JPN, aliases,
+capability metadata, provision year, share, and citation are resolved from ETO.
+Capacity, duration, quality, transit, communication, and order activity remain
+explicitly synthetic. The simulation display name avoids presenting synthetic
+performance as a factual claim about the real organization.
+
+[D-014]
+Date: 2026-10-04
+Status: APPROVED
+Resolves: P-001 and part of P-003
+Decision: Use SimPy with a virtual clock where one unit is one simulated day,
+a fixed seed of 42, and synthetic start time 2026-01-05T00:00:00Z. The first
+lifecycle is CREATED, ACKNOWLEDGED, QUEUED, IN_PRODUCTION, QUALITY_CHECK,
+READY_TO_SHIP, SHIPPED, DELIVERED.
+Rationale: Virtual deterministic execution makes scenarios fast, reproducible,
+and testable.
+Consequences: The first happy path uses zero-day acknowledgement, one queue day,
+four production days at 25 wafers per day, one quality-check day, and two transit
+days. It includes milestone messages and daily production-progress updates.
+
+[D-015]
+Date: 2026-10-04
+Status: APPROVED
+Resolves: P-003
+Decision: Store committed user configuration under hidden directory
+.fabtrace/config and generated, gitignored runs under .fabtrace/runs. Resolve ETO
+facts, synthetic provider configuration, and scenario/order configuration into
+a deterministic effective_config.json at simulation startup. Store operational
+execution metadata separately in run_manifest.json.
+Rationale: Separating deterministic effective configuration from runtime
+metadata preserves reproducibility while retaining execution provenance.
+Consequences: Each run records enriched provider and capability facts including
+country code and country name, source citations, source-file SHA-256 hashes,
+generator/Python versions, and the effective-config hash. Existing run
+directories are never silently overwritten.
+
+[D-016]
+Date: 2026-10-04
+Status: APPROVED
+Resolves: P-003 and P-004
+Decision: The first simulator writes linked ground_truth.jsonl and
+provider_updates.jsonl streams and is invoked through "fabtrace simulate" with
+a scenario path and runs directory. Failures, rework, pricing, risk, multiple
+providers, Kafka/Redpanda, databases, orchestration, LLM extraction, Spark,
+Kubernetes, cloud infrastructure, analytics, and dashboard work are deferred.
+Rationale: A single happy-path vertical slice proves configuration resolution,
+state transitions, event/message linkage, persistence, and replayable output
+before more infrastructure is introduced.
+Consequences: No deferred component is authorized by this decision. Each needs
+its own later approval.
+
+[D-017]
+Date: 2026-10-04
+Status: APPROVED
+Decision: Maintain tradeoffs.txt as the append-only rationale record for major
+FabTrace design decisions, alongside log.txt.
+Rationale: A learning project should retain not only what was chosen but the
+alternatives, disadvantages, risks, and conditions under which a decision should
+be reconsidered.
+Consequences: AGENTS.md requires major decisions to update both records in the
+same change. log.txt remains the authoritative status/decision ledger;
+tradeoffs.txt explains the associated engineering judgment.
+
+[D-018]
+Date: 2026-10-04
+Status: APPROVED
+Decision: End every implementation stage with a self-contained summary and
+copy-paste executable commands that let the user exercise and test that stage.
+Rationale: FabTrace is a learning project, so implementation must remain
+reproducible and understandable rather than being delivered only as code.
+Consequences: Stage handoffs must describe implemented behavior and boundaries,
+expected outputs/artifacts, exact verification already performed, associated
+decision/tradeoff entries, deferred scope, and the next milestone. Commands must
+account for safety rules such as refusing to overwrite an existing run.
+
+[D-019]
+Date: 2026-10-04
+Status: APPROVED
+Decision: Add a deterministic equipment-failure scenario for PO-0001. After one
+production day and 25 completed wafers, incident INC-0001 pauses production for
+two simulated days because of equipment_calibration, then production resumes.
+Extend the lifecycle with IN_PRODUCTION to BLOCKED to IN_PRODUCTION and add
+equipment_failure and production_resumed events.
+Rationale: The first exceptional scenario should demonstrate a causal incident,
+state interruption, delivery-forecast revision, and unstructured provider update
+without introducing random behavior or additional providers.
+Consequences: The original delivery forecast of 2026-01-13 changes to 2026-01-15
+at the failure event. Incident events carry the incident ID/type/reason, two-day
+delay, previous forecast, and current forecast. Subsequent events retain the
+revised forecast. The happy-path scenario remains behaviorally unchanged.
+
+[D-020]
+Date: 2026-10-04
+Status: APPROVED
+Decision: Add seeded stochastic equipment-failure generation as a third scenario
+mode while retaining no-incident and explicit-incident modes. The synthetic P208
+profile uses a 0.5 daily failure probability, at most one failure per order,
+weighted downtime of one/two/three days at 0.25/0.5/0.25, and weighted reasons
+equipment_calibration/unplanned_maintenance at 0.6/0.4.
+Rationale: Seeded stochastic behavior teaches probability distributions and
+Monte Carlo-ready simulation mechanics while remaining reproducible and
+auditable.
+Consequences: Each order's random stream is derived with SHA-256 from scenario
+seed and stable scenario/provider/order identities, insulating it from iteration
+order. Private truth events retain draw, threshold, distribution result, source,
+and stream version; provider messages do not expose random internals. Seed 42
+produces a day-3 failure with three downtime days and delivery on 2026-01-16.
+Seed 46 produces no failure for the four-day production run. These probabilities
+are teaching assumptions, not claims about the source organization.
+
+[D-021]
+Date: 2026-10-04
+Status: APPROVED
+Decision: Add a local raw provider-update ingestion stage exposed as
+"fabtrace ingest provider-updates". Ingest provider_updates.jsonl in bounded
+batches into generated, gitignored .fabtrace/state/fabtrace.db using Python's
+standard-library SQLite. Preserve each original payload unchanged, retain
+ingestion/source metadata, enforce idempotency by message_id, and store invalid
+or identity-conflicting payloads in a separate append-only quarantine table.
+Rationale: This introduces durable raw retention, SQL, replay, validation, and
+delivery semantics with the smallest infrastructure suitable for the current
+single-process learning milestone.
+Consequences: Delivery is honestly described as at-least-once with idempotent
+accepted-message writes. Replaying an input does not duplicate accepted rows.
+Malformed and unsupported-schema inputs remain inspectable with failure reasons.
+The ingestion consumer validates only provider messages and never reads private
+simulation ground truth. Kafka/Redpanda, PostgreSQL, extraction, normalized
+facts, orchestration, and analytical models remain deferred.
+
+[D-022]
+Date: 2026-10-07
+Status: APPROVED
+Decision: Add Stage 5 provider-update extraction using a deterministic,
+standard-library rules-v1 baseline with no new dependency. The extractor reads
+only accepted raw provider-message subject/body content and envelope identity
+metadata, writes append-only versioned extraction runs, attempts, and typed
+claims in the existing SQLite database, and is invoked with a required scenario
+boundary through "fabtrace extract provider-updates". Claims cover order status,
+progress, completed/ordered quantity, unit, forecast delivery date, delay,
+incident reason, and operational milestone date. Each claim retains message and
+run provenance, its exact source span, normalized typed value, extractor version,
+confidence, and validation status.
+Rationale: Exact deterministic rules provide an inspectable, reproducible
+baseline against which a later LLM extractor can be measured.
+Consequences: Exact supported patterns receive confidence 1.0. Unsupported or
+ambiguous text abstains; conflicting order references require review. Replaying
+the same message with rules-v1 is idempotent, while a future extractor version
+may append independent claims without overwriting history. A separate
+"fabtrace evaluate extraction" path may join completed claims to private ground
+truth only after extraction and reports field-level exact metrics and
+abstentions. LLM/API selection, claim reconciliation into current order state,
+human-review workflows, and analytics remain deferred.
+
+[D-023]
+Date: 2026-10-07
+Status: APPROVED
+Decision: Add Stage 6 order-state reconciliation as version order-state-v1,
+invoked through "fabtrace reconcile order-state" with a required scenario
+boundary. Consume only valid confidence-1.0 rules-v1 claims and write append-only
+reconciliation runs, per-message decisions, and order-state snapshots in schema
+version 3. Expose the latest snapshot per scenario, order, and reconciliation
+version through current_order_state. Process knowledge in received-time order,
+retain provider sent time as fact-effective time, carry unchanged fields forward
+with field-level source-message provenance, allow approved lifecycle transitions
+and repeated production updates, mark wholly older updates stale, and mark
+illegal transitions, same-time value disagreements, invalid regressions, or
+unresolved extraction as conflicts.
+Rationale: Immutable claims need a deterministic temporal projection before
+progress, forecast, and risk analytics can consume a coherent order state.
+Consequences: Reconciliation replay is idempotent. Current state remains a
+source-reported projection rather than a predictive model. It exposes status,
+progress, completed/ordered quantity, unit, provider forecast date, reported
+delay, incident reason, and latest milestone with as-of/effective times and
+provenance. Risk scoring, predictive ETA, cost, quality metrics, human conflict
+resolution, and dashboard work remain deferred.
+
+[D-024]
+Date: 2026-10-07
+Status: APPROVED
+Decision: Add Stage 7 operational analytics as operational-metrics-v1, invoked
+through "fabtrace analyze orders" with required scenario and timezone-aware
+as-of boundaries. Read only order-state-v1 snapshots and reconciliation
+decisions observed at or before that as-of time. Write append-only analytics
+runs and order metric snapshots in SQLite schema version 4 and expose the latest
+as-of result per scenario, order, and metric version through
+current_order_metrics. Metrics include current source-reported status/progress,
+initial and current provider forecasts, signed forecast drift days, forecast
+revision count, signed days to forecast, latest reported delay plus an explicit
+presence flag, two-observation progress velocity, latest-update age,
+communication lag, and applied/stale/conflict message counts.
+Rationale: Dashboard-ready operational signals should be reproducible,
+hand-computable, decomposable, and protected from future-data leakage before any
+predictive or composite model is introduced.
+Consequences: The CLI requires --as-of and analytics replay is idempotent at the
+scenario/order/metric-version/as-of grain. Missing reported delay and
+insufficient progress history remain NULL rather than becoming invented zeros.
+Forecast drift is positive when delivery moves later; age and lag are measured
+in fractional days; velocity is percentage points per day. No composite risk
+score, predicted ETA, cost, quality, critical path, or dashboard is authorized
+by this decision.
+
+[D-025]
+Date: 2026-10-11
+Status: APPROVED
+Decision: Add Stage 8 as a read-only dashboard and API layer using FastAPI,
+Jinja templates, and progressively enhanced HTMX pages. Expose versioned JSON
+under /api/v1 for order summaries, order detail/history, and provider-grouped
+order indicators. Provide server-rendered overview, order-detail/timeline, and
+provider pages. Read the existing SQLite database without initializing,
+migrating, or writing it; show metric as-of times and source provenance; keep
+operational indicators separate rather than inventing a composite risk score.
+Add automated API, query, and page-rendering coverage and a local development
+server command.
+Rationale: The existing reconciled state and operational metrics are ready for
+human inspection, while a small server-rendered application teaches API and
+dashboard boundaries without introducing a separate frontend build system.
+Consequences: FastAPI, Jinja2, Uvicorn, and HTTP test support become project
+dependencies, while HTMX is a progressive browser enhancement and core pages
+remain useful without JavaScript. The web process is local-development software
+with no authentication, authorization, write actions, scheduler, composite
+risk score, or production deployment contract. API responses preserve NULLs
+and expose independent state and metric timestamps.
+
+[D-026]
+Date: 2026-10-11
+Status: APPROVED
+Decision: Add Stage 9 Product Designer v1 as a local visual dependency-graph
+editor using Cytoscape.js 3.34.3 inside the existing FastAPI/Jinja application.
+Users can create, position, configure, connect, and delete material, process,
+reusable-capability, and final-output nodes; configure requirement quantity and
+unit on edges; assign ETO references and provider candidates; preview the flat
+recipe JSON and a Mermaid representation; and receive client and authoritative
+server validation. Store mutable drafts only under
+.fabtrace/drafts/products/ and publish immutable numbered versions only under
+.fabtrace/config/products/<product-id>/. Deleting a node requires confirmation
+and removes its connected edges. Published versions are never overwritten and
+editing starts a new draft. Keep operational SQLite access read-only and keep
+the configuration server bound to local development by default.
+Rationale: A visual editor makes product structure approachable while the flat
+recipe remains easy to validate, diff, version, and consume in the future
+planner.
+Consequences: The dashboard gains narrowly scoped filesystem writes and a
+pinned browser-side Cytoscape.js dependency loaded from a CDN. Exactly one
+final output, unique safe IDs, valid references, positive quantities, compatible
+edge units, and an acyclic graph are required for publication. Drafts may be
+incomplete but must still be structurally valid JSON. Product planning,
+provider selection, purchase-order generation, and delivery calculation remain
+deferred to the next stage.
+
+[D-027]
+Date: 2026-10-11
+Status: APPROVED
+Decision: Add Stage 10 Planner v1 as planner-v1. Extend material product nodes
+with a positive synthetic lead_time_days publication requirement while process
+nodes retain positive duration_days. Interpret each dependency-edge quantity as
+prerequisite units per unit of its dependent node; recursively expand and sum
+shared demand from the customer output quantity. Deterministically select the
+first configured provider candidate. Generate one purchase order per material
+node and one provider work order per process node; capabilities create checks
+but no purchase orders, and the final output creates no provider order. Schedule
+nodes with a DAG forward pass from a timezone-aware requested-at instant,
+letting independent branches run in parallel and starting each dependent after
+all prerequisites finish. Report the longest deterministic branch as the
+critical path and the output finish as expected delivery. Provide "fabtrace
+plan order" and a local Plan Order page. Write immutable plan.json artifacts
+under .fabtrace/plans/<order-id>/ and refuse overwrite. Keep operational SQLite
+read-only.
+Rationale: A transparent, hand-computable deterministic planner connects
+published product recipes to provider orders and expected delivery without
+inventing capacity, cost, yield, or uncertainty models that the current data
+cannot support.
+Consequences: Planning is reproducible from the published product version,
+recipe fingerprint, customer quantity, and requested-at time. Material lead
+time, process duration, quantities, and provider ordering are explicitly
+synthetic configuration. Each graph node remains a separate provider-order
+grain. Inventory, consolidation, capacity queues, batching, yield, rework,
+cost optimization, and probabilistic dates remain deferred.
+
+[D-028]
+Date: 2026-10-11
+Status: IMPLEMENTED
+Decision: Complete Stage 10 Planner v1 across the product schema, deterministic
+planning engine, immutable artifact store, CLI, versioned API, and local web
+workflow. Product publication now requires positive finite material lead times;
+planning requires a positive finite output quantity and timezone-aware request
+time. The Products page starts plans only from immutable published versions,
+and plan pages expose provider-order dependencies, node schedules, recipe
+fingerprints, assumptions, expected delivery, and the critical path.
+Rationale: The approved planning contract in D-027 must be executable and
+auditable from both the learning-oriented UI and automation-oriented CLI/API.
+Consequences: Plans are written only to .fabtrace/plans/<order-id>/plan.json,
+are ignored by Git, and reject reuse of an order ID. The operational database
+remains read-only. Verification passed 93 automated tests, including a
+hand-computable parallel graph, shared-demand summation, provider selection,
+timezone normalization, immutable replay rejection, filesystem containment,
+CLI execution, and the combined designer-to-publish-to-plan web workflow.
+
+[D-029]
+Date: 2026-10-11
+Status: APPROVED
+Decision: Add Stage 11 plan-driven multi-provider simulation through a new
+"fabtrace simulate-plan" command. The immutable plan supplies provider orders,
+quantities, dependencies, planned release times, and the UTC simulation start;
+a separate versioned plan-execution scenario supplies the deterministic seed,
+provider-profile references, and incident-generation mode. Resolve each
+selected plan provider ID to exactly one profile source_provider_id and each
+actionable product node's ETO reference to a configured provider capability;
+reject missing or incompatible mappings. Run one lightweight SimPy actor per
+provider order in a shared virtual clock. An actor may begin no earlier than
+its planned release and only after every upstream provider order reaches
+DELIVERED. Retain the existing lifecycle for purchase and work orders, treating
+DELIVERED for a work order as transfer of its completed output to the next
+production step.
+Rationale: Plan-driven execution should be causal, deterministic, compatible
+with the existing raw-message and reconciliation contracts, and inexpensive to
+run locally.
+Consequences: Existing scenario-driven simulation remains supported. New runs
+record and fingerprint the source plan, emit one chronological linked truth and
+message stream across all provider orders, and fail rather than invent a
+provider or capability mapping. Work-order delivery is a simulation handoff
+semantic, not physical freight. No OS thread, broker, database, distributed
+worker, or real-time wait is introduced.
+
+[D-030]
+Date: 2026-10-11
+Status: IMPLEMENTED
+Decision: Complete Stage 11 plan-driven multi-provider simulation. Planner
+provider orders now retain their optional ETO capability IDs. The new
+plan-execution configuration resolves source provider profiles, ETO capability
+provision, country provenance, units, dependency references, and plan SHA-256
+before execution. The "fabtrace simulate-plan" command snapshots the exact
+plan, writes its resolved effective configuration and manifest, and runs one
+deterministic SimPy coroutine per provider order. Planned-release timers and
+upstream completion events jointly gate each actor. Event and message output
+preserves SimPy scheduling order so an upstream DELIVERED record precedes a
+same-instant dependent ORDER_CREATED record. Add a second explicitly synthetic
+P226 wafer-provider profile and a default versioned plan-execution scenario.
+Rationale: The approved D-029 contract is now executable while legacy
+single-order simulations and public provider-message envelopes remain
+compatible.
+Consequences: A fixed plan, execution scenario, seed, source snapshot, and
+profile set reproduce the same effective config, truth stream, and message
+stream. Runs refuse overwrite and reject missing profiles, absent ETO
+capabilities, unit mismatches, unknown dependencies, and dependency cycles.
+Verification passed source validation with 0 errors, 10 focused plan-simulation
+tests, and all 103 repository tests. The existing raw ingestion stage accepts
+the new messages without quarantine. Rules-v1 extraction is intentionally not
+expanded in this stage and will abstain on new provider-order IDs and work-order
+handoff wording until the next versioned extraction stage.
+
+[D-031]
+Date: 2026-10-11
+Status: IMPLEMENTED
+Decision: Make Product Designer publication outcomes visible beside the editor
+actions. A blocked publication now reports its issue count, marks the document
+as publish-blocked, and scrolls to authoritative validation details. A
+successful publication reports its immutable version and navigates directly to
+the Plan Order form for that exact version.
+Rationale: Validation feedback previously rendered below the graph, so a
+rejected Publish click could appear inert even though the draft was invalid.
+Consequences: Publication validation and storage semantics are unchanged, but
+the user receives immediate feedback and a successful publish has an explicit
+next action. Existing API behavior remains authoritative and independently
+tested.
+
+[D-032]
+Date: 2026-10-11
+Status: IMPLEMENTED
+Decision: Update Product Designer node and dependency properties continuously
+on browser input without rebuilding the property form after each field change.
+Rationale: Replacing the form during a blur/change event could consume the
+user's next click and leave later fields visually editable but absent from the
+saved draft, which then caused publication to remain blocked.
+Consequences: Unit, provider, ETO reference, duration, lead-time, quantity, and
+edge-unit values now enter the in-memory recipe as they are typed and are
+included when Publish first saves the draft. Server validation and immutable
+publication rules remain unchanged.
+
+[D-033]
+Date: 2026-10-11
+Status: IMPLEMENTED
+Decision: Automatically discover provider candidates for material and process
+nodes from the node's ETO reference. Add a read-only versioned source API over
+the immutable ETO catalog. Include only organization providers with a matching
+provision relationship, deduplicate through the catalog's provider identity,
+and return them in deterministic provider-ID order. Automatically fill an
+empty candidate field and refresh it when the ETO reference changes or the
+user requests refresh, while leaving the resulting comma-separated IDs fully
+editable.
+Rationale: Users should not have to manually look up provider IDs already
+present in the copied source data, but sourced relationships must remain
+distinct from provider ranking or synthetic execution suitability.
+Consequences: The local server accepts an explicit --data-dir and lazily reads
+validated source tables for discovery. Candidate order is reproducible but is
+not a recommendation; Planner v1 still selects the first ID, so users may
+reorder or remove candidates. Country rows are excluded. Market share,
+reliability, quality, price, capacity, and execution-profile availability do
+not influence discovery.
+
+[D-034]
+Date: 2026-10-11
+Status: IMPLEMENTED
+Decision: Remove material lead-time editing from the Product Designer. Product
+authors configure product structure, quantities, units, ETO references, and
+provider candidates, but no longer supply an operational material lead time.
+Until provider-specific planning replaces Planner v1 scheduling, preserve an
+internal positive one-day synthetic compatibility value for newly created
+materials and legacy drafts whose value is absent; keep existing positive
+values when an older recipe is edited.
+Rationale: Lead time belongs to order fulfillment and varies with the selected
+provider, quantity, capacity, quality checks, and transport rather than with
+the product definition itself.
+Consequences: The setup page no longer displays or updates a lead-time field,
+and drafts remain publishable under the current schema and validation contract.
+The compatibility value remains visible in recipe JSON and is not a forecast,
+sourced fact, or user decision. Provider-derived order timing is deferred to a
+separate planner contract change.
+
+[D-035]
+Date: 2026-10-11
+Status: IMPLEMENTED
+Decision: When deleting a Product Designer selection, enumerate every selected
+Cytoscape node and remove its matching entry from the in-memory recipe before
+removing the graph collection. Continue rebuilding all dependency requirements
+from the remaining graph edges.
+Rationale: Treating a Cytoscape collection as one node made node deletion
+dependent on collection shape. The canvas could remove the selected node while
+the recipe JSON retained it, producing orphan-node and related publication
+validation failures.
+Consequences: Single- and multi-node deletion now keep the graph, JSON preview,
+saved draft, and validation input synchronized. Deleting only a dependency
+still leaves both endpoint nodes intact.
+
+[D-036]
+Date: 2026-10-11
+Status: APPROVED
+Decision: Add Stage 12 as an append-only deterministic rules-v2 extraction and
+order-state-v2 reconciliation path for plan-generated provider messages. Keep
+rules-v1 and order-state-v1 reproducible; recognize complete purchase- and
+work-order IDs; support exact work-output handoff templates; require message
+body identity to agree with envelope identity; and retain exact spans,
+confidence, and abstain/review behavior. The dashboard prefers v2 state per
+provider order and falls back to v1. Purchase and work orders remain separate
+rows, explicit ETL commands remain separate, and customer-order rollup is
+deferred.
+Rationale: Plan-execution messages must cross the same untrusted-message
+boundary as legacy simulation without rewriting history, mixing extractor
+versions, or displaying raw prose as authoritative state.
+Consequences: Existing ingested plan-execution messages can be backfilled
+without simulation or ingestion replay. Work handoff maps to the lifecycle
+already approved in D-029. No LLM, external API, dependency, automatic
+orchestration, or customer-order aggregation is introduced.
+
+[D-037]
+Date: 2026-10-11
+Status: IMPLEMENTED
+Decision: Complete Stage 12. Make rules-v2 the default deterministic extractor
+while retaining selectable rules-v1 execution, and make order-state-v2 the
+default reconciliation contract with an explicit immutable mapping to
+rules-v2. Add exact full-ID support for plan-generated purchase and work orders,
+including quality handoff, output dispatch, and completed output handoff
+messages. Make dashboard queries choose v2 state per provider order and fall
+back to v1, and expose the selected reconciliation version in API/detail views.
+Rationale: The approved D-036 contract is now executable end to end without
+reading private simulator truth or rewriting any v1 claims, decisions, or
+snapshots.
+Consequences: Existing plan-execution raw messages become visible after the
+explicit extraction, reconciliation, and optional analytics commands. A
+temporary copy of the current project database processed all 8 retained
+plan-execution messages into 20 rules-v2 claims, 8 applied order-state-v2
+snapshots, zero abstentions/reviews/conflicts, and one metric row. Source-data
+validation passed with 0 errors; 46 focused tests and all 108 repository tests
+passed. Customer-order rollup and automatic orchestration remain deferred.
+
+[D-038]
+Date: 2026-10-11
+Status: APPROVED
+Decision: Add Stage 13 customer-order control-tower support. Register immutable
+plan artifacts explicitly into append-only SQLite plan, provider-order, and
+dependency tables using exact SHA-256 idempotency; reject one customer order ID
+with different bytes. Join registered provider orders to preferred reconciled
+execution. Show completion as delivered provider-order count over total rather
+than averaging percentages across units. Derive customer status as DELIVERED
+when all terminal provider orders are delivered, BLOCKED when an active
+critical-path order is blocked, IN_PROGRESS when provider state exists, and
+otherwise PLANNED. Use the maximum reported terminal-order forecast as the
+current delivery estimate and visibly fall back to the plan date. Make customer
+orders the main dashboard grain, with provider-order evidence retained.
+Rationale: Provider-order state becomes operationally useful only when it is
+traceably reconnected to the immutable customer plan without inventing
+cross-unit progress or hiding missing forecasts.
+Consequences: Registration remains an explicit learning-oriented ETL command.
+The projection is deterministic and versioned as customer-order-v1. Multiple
+execution scenarios produce separate projections; unexecuted plans remain
+visible without a scenario. Customer delivery is a transparent provider-report
+rollup, not a probabilistic or independently trained forecast.
+
+[D-039]
+Date: 2026-10-11
+Status: IMPLEMENTED
+Decision: Complete Stage 13. Add schema-v5 append-only registered plan,
+provider-order, and dependency tables; the idempotent "fabtrace register plan"
+command; customer-order-v1 projection logic; versioned customer-order APIs; a
+customer-order dashboard ledger; and a drill-down that links planned purchase
+and work orders to their existing provider-order evidence pages. Preserve the
+existing provider-order APIs and views.
+Rationale: The approved D-038 contract is now executable from immutable plan
+registration through customer-level operational visibility without frontend
+metric invention or cross-unit percentage averaging.
+Consequences: The main dashboard is empty until at least one plan is registered,
+including when provider states already exist. A temporary copy of the current
+project database successfully migrated from schema v4 to v5, registered the
+retained fixed-order source plan, processed its 8 raw updates with zero
+extraction/reconciliation exceptions, and projected fixed-order as DELIVERED,
+1/1 provider orders complete, with a provider-reported 2026-10-25 delivery and
++4-day drift from plan. Source validation passed with 0 errors, 16 focused
+customer/dashboard tests passed, and all 112 repository tests passed. The real
+project database was not changed during verification.
+
+[D-040]
+Date: 2026-10-11
+Status: APPROVED
+Decision: Add Stage 14 as a synchronous local execute-plan-v1 pipeline that
+invokes the existing plan registration, simulation, ingestion, extraction,
+reconciliation, and analytics boundaries. Persist pipeline and stage history,
+stop downstream work on failure, resume safely from completed checkpoints,
+treat idempotent stage replays as success, never overwrite plans or simulation
+outputs, and expose pipeline status on customer-order detail. Do not add an
+external orchestration framework.
+Rationale: The individual contracts are now stable enough to teach
+orchestration, observability, failure handling, and replay without hiding them
+behind distributed infrastructure.
+Consequences: Pipeline identity and stage execution history become schema-v6
+operational records. A matching completed simulation may be reused only after
+validation. Analytics uses the scenario's latest retained message received time
+as its reproducible cutoff. Shared scenario IDs retain their existing bounded
+processing semantics, so stage counts may include other orders in that scenario.
+
+[D-041]
+Date: 2026-10-11
+Status: IMPLEMENTED
+Decision: Complete Stage 14 with the "fabtrace pipeline execute-plan" command,
+execute-plan-v1 input fingerprinting, schema-v6 append-only pipeline run and
+stage-attempt events, fail-fast execution, checkpoint recovery, validated
+simulation reuse, automatic latest-received-time analytics, and pipeline
+observability on the customer-order API and detail page.
+Rationale: The approved D-040 orchestration contract is now executable without
+duplicating component business logic or adding an orchestration dependency.
+Consequences: Identical plan, resolved scenario/profile configuration, ETO
+source data, component versions, database target, and output target resume the
+same pipeline identity. A changed fingerprint creates a separate run. Tests
+prove a failed analytics attempt resumes as attempt 2 while the five completed
+upstream stages remain checkpoints. Source validation passed with 0 errors, a
+schema-v5 fixture migrated to v6 with all four pipeline tables, 18 focused
+orchestration/customer/web tests passed, all 115 repository tests passed, the
+pipeline CLI help rendered successfully, and git diff validation passed. The
+real project database and retained run outputs were not modified by verification.

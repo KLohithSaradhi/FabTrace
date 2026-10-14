@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Orders · FabTrace{% endblock %}
+{% block content %}
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Operational overview</p>
+      <h1>Customer orders in motion.</h1>
+      <p class="lede">Immutable plans joined to reconciled provider execution, with the evidence left attached.</p>
+    </div>
+    <div class="hero-stat">
+      <strong>{{ orders | length }}</strong>
+      <span>customer order{% if orders | length != 1 %}s{% endif %}</span>
+    </div>
+  </section>
+
+  <section class="panel filter-panel">
+    <form action="/" method="get" hx-get="/fragments/orders" hx-target="#orders-panel" hx-indicator="#loading">
+      <label for="scenario_id">Scenario</label>
+      <select id="scenario_id" name="scenario_id">
+        <option value="">All scenarios</option>
+        {% for scenario in scenarios %}
+          <option value="{{ scenario }}" {% if scenario == selected_scenario %}selected{% endif %}>{{ scenario }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Apply filter</button>
+      <span id="loading" class="htmx-indicator">Refreshing…</span>
+    </form>
+  </section>
+
+  <section id="orders-panel" aria-live="polite">
+    {% include "partials/order_table.html" %}
+  </section>
+{% endblock %}

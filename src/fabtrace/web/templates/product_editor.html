@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ recipe.product_name }} · Product Designer{% endblock %}
+{% block head %}
+  <script defer src="https://cdn.jsdelivr.net/npm/cytoscape@3.34.3/dist/cytoscape.min.js"></script>
+{% endblock %}
+{% block content %}
+  <section class="designer-header">
+    <div>
+      <a class="back-link" href="/products">← Product catalog</a>
+      <p class="eyebrow">Product Designer v1</p>
+      <div class="designer-title-fields">
+        <input id="product-id" aria-label="Product ID" value="{{ recipe.product_id }}" {% if not is_new %}readonly{% endif %}>
+        <input id="product-name" aria-label="Product name" value="{{ recipe.product_name }}">
+      </div>
+      <textarea id="product-description" aria-label="Product description" placeholder="What is this product?">{{ recipe.description }}</textarea>
+    </div>
+    <div class="designer-actions">
+      <span id="document-status" class="document-status status-{{ recipe.status }}">{{ recipe.status }}{% if recipe.product_version %} · v{{ recipe.product_version }}{% endif %}</span>
+      <span id="editor-action-status" class="editor-action-status" role="status" aria-live="polite"></span>
+      <button id="validate-product" class="secondary-button" type="button">Validate</button>
+      <button id="save-product" class="secondary-button" type="button">Save draft</button>
+      <button id="publish-product" type="button">Publish version</button>
+    </div>
+  </section>
+
+  <section class="designer-shell">
+    <aside class="node-palette panel">
+      <p class="eyebrow">Add nodes</p>
+      <button class="palette-button material" data-add-kind="material" type="button"><i></i>Material</button>
+      <button class="palette-button process" data-add-kind="process" type="button"><i></i>Process</button>
+      <button class="palette-button capability" data-add-kind="capability" type="button"><i></i>Capability</button>
+      <button class="palette-button output" data-add-kind="output" type="button"><i></i>Final output</button>
+      <hr>
+      <p class="eyebrow">Graph tools</p>
+      <button id="connect-nodes" class="secondary-button" type="button">Connect nodes</button>
+      <button id="layout-graph" class="secondary-button" type="button">Auto layout</button>
+      <button id="fit-graph" class="secondary-button" type="button">Fit graph</button>
+      <button id="delete-selected" class="danger-button" type="button" disabled>Delete selected</button>
+      <p id="connect-help" class="tool-help">Select a node or edge to configure it.</p>
+    </aside>
+
+    <div class="graph-panel panel">
+      <div id="product-graph" role="application" aria-label="Product dependency graph"></div>
+      <div class="graph-legend">
+        <span><i class="material"></i>Material</span>
+        <span><i class="process"></i>Process</span>
+        <span><i class="capability"></i>Capability</span>
+        <span><i class="output"></i>Output</span>
+      </div>
+    </div>
+
+    <aside id="property-panel" class="property-panel panel">
+      <div class="empty-properties">
+        <p class="eyebrow">Properties</p>
+        <h2>Select an element</h2>
+        <p>Choose a node or dependency edge to edit its details.</p>
+      </div>
+    </aside>
+  </section>
+
+  <section id="validation-panel" class="panel validation-panel" aria-live="polite">
+    <div><p class="eyebrow">Validation</p><h2>Not checked yet</h2></div>
+    <p>Validate before publishing to check the output, cycles, units, providers, and disconnected nodes.</p>
+  </section>
+
+  <section class="preview-grid">
+    <details class="panel preview-panel" open>
+      <summary>Flat recipe JSON</summary>
+      <pre id="json-preview"></pre>
+    </details>
+    <details class="panel preview-panel">
+      <summary>Mermaid representation</summary>
+      <pre id="mermaid-preview"></pre>
+    </details>
+  </section>
+{% endblock %}
+{% block scripts %}
+  <script>
+    window.FABTRACE_RECIPE = {{ recipe_json | tojson }};
+    window.FABTRACE_IS_NEW = {{ is_new | tojson }};
+  </script>
+  <script src="{{ url_for('static', path='/product-editor.js') }}"></script>
+{% endblock %}

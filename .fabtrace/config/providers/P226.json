@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "profile_id": "P226-synthetic-v1",
+  "profile_version": 1,
+  "synthetic": true,
+  "source_provider_id": "P226",
+  "simulation_name": "Synthetic Wafer Supplier P226",
+  "capabilities": [
+    {
+      "source_capability_id": "N26",
+      "unit": "wafer",
+      "daily_capacity": 20,
+      "quality_check_days": 1
+    }
+  ],
+  "operations": {
+    "acknowledgement_delay_days": 1,
+    "queue_delay_days": 1,
+    "transit_days": 2
+  },
+  "communication": {
+    "channel": "email",
+    "progress_update_interval_days": 1,
+    "style": "concise",
+    "send_milestone_updates": true
+  },
+  "disruption_model": {
+    "model_version": 1,
+    "daily_failure_probability": 0.15,
+    "maximum_failures_per_order": 1,
+    "downtime_distribution": [
+      {"days": 1, "weight": 0.6},
+      {"days": 2, "weight": 0.3},
+      {"days": 3, "weight": 0.1}
+    ],
+    "reason_distribution": [
+      {"reason_code": "equipment_calibration", "weight": 0.4},
+      {"reason_code": "unplanned_maintenance", "weight": 0.6}
+    ]
+  }
+}

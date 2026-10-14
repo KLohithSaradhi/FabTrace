@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>{% block title %}FabTrace{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+    <script defer src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="/">
+        <span class="brand-mark">FT</span>
+        <span><strong>FabTrace</strong><small>Supply chain control tower</small></span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="/">Orders</a>
+        <a href="/providers">Providers</a>
+        <a href="/products">Products</a>
+        <a href="/plans">Plans</a>
+        <a href="/docs">API</a>
+      </nav>
+      <span class="read-only"><i></i> Operational DB read-only</span>
+    </header>
+    <main>{% block content %}{% endblock %}</main>
+    <footer>
+      Source-reported operational indicators · No composite risk score
+    </footer>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

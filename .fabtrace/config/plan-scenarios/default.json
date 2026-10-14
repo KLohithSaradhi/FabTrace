@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "plan-execution",
+  "scenario_version": 1,
+  "seed": 42,
+  "synthetic": true,
+  "providers": [
+    {"profile": "../providers/P208.json"},
+    {"profile": "../providers/P226.json"}
+  ],
+  "incident_generation": {
+    "mode": "seeded_stochastic",
+    "model": "provider_profile",
+    "random_stream_version": 1
+  }
+}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ customer_order.order_id }} · FabTrace{% endblock %}
+{% block content %}
+  <section class="detail-header">
+    <div>
+      <a class="back-link" href="/">← All customer orders</a>
+      <p class="eyebrow">{{ customer_order.scenario_id or "Plan only" }}</p>
+      <h1>{{ customer_order.order_id }}</h1>
+      <p>{{ customer_order.product_id }} v{{ customer_order.product_version }} · {{ customer_order.requested_quantity }} {{ customer_order.output_unit }}</p>
+    </div>
+    <span class="status status-large status-{{ customer_order.status | lower }}">{{ customer_order.status | replace('_', ' ') }}</span>
+  </section>
+
+  <section class="metric-grid">
+    <article class="metric-card accent">
+      <span>Provider orders complete</span>
+      <strong>{{ customer_order.completed_provider_order_count }} / {{ customer_order.provider_order_count }}</strong>
+      <small>No cross-unit percentage averaging</small>
+    </article>
+    <article class="metric-card">
+      <span>Planned delivery</span>
+      <strong>{{ customer_order.planned_delivery_at }}</strong>
+      <small>Immutable planner baseline</small>
+    </article>
+    <article class="metric-card">
+      <span>Current delivery estimate</span>
+      <strong>{{ customer_order.current_delivery_date }}</strong>
+      <small>{{ customer_order.delivery_estimate_source | replace('_', ' ') }}</small>
+    </article>
+    <article class="metric-card">
+      <span>Schedule drift</span>
+      <strong>{% if customer_order.delivery_drift_days > 0 %}+{% endif %}{{ customer_order.delivery_drift_days }} d</strong>
+      <small>Current estimate versus plan</small>
+    </article>
+    <article class="metric-card">
+      <span>Critical-path blocks</span>
+      <strong>{{ customer_order.critical_path_blocked_count }}</strong>
+      <small>Provider-reported BLOCKED state</small>
+    </article>
+    <article class="metric-card">
+      <span>Latest provider update</span>
+      <strong>{{ customer_order.latest_provider_update_at or "—" }}</strong>
+      <small>{{ customer_order.reported_provider_order_count }} order(s) reporting</small>
+    </article>
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel-heading">
+      <div><p class="eyebrow">Orchestration</p><h2>Pipeline status</h2></div>
+      <span>{{ pipeline_runs | length }} run(s)</span>
+    </div>
+    {% if pipeline_runs %}
+      {% for run in pipeline_runs %}
+        <div class="panel-heading">
+          <div>
+            <strong>{{ run.pipeline_run_id }}</strong>
+            <small>{{ run.scenario_id }} · last event {{ run.latest_event_at }}</small>
+          </div>
+          <span class="status status-{{ run.status | lower }}">{{ run.status }}</span>
+        </div>
+        {% if run.error %}<p class="missing">{{ run.error }}</p>{% endif %}
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Stage</th><th>Status</th><th>Attempt</th><th>Duration</th><th>Started</th><th>Error</th></tr></thead>
+            <tbody>
+              {% for stage in run.stages %}
+                <tr>
+                  <td><strong>{{ stage.stage_name | replace('_', ' ') }}</strong></td>
+                  <td><span class="status status-{{ stage.status | lower }}">{{ stage.status }}</span></td>
+                  <td>{{ stage.attempt_number }}</td>
+                  <td>{% if stage.duration_ms is not none %}{{ stage.duration_ms }} ms{% else %}—{% endif %}</td>
+                  <td>{{ stage.started_at }}</td>
+                  <td>{{ stage.error or "—" }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state"><strong>No pipeline run recorded.</strong><span>Use <code>fabtrace pipeline execute-plan</code> to execute this plan end to end.</span></div>
+    {% endif %}
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel-heading">
+      <div><p class="eyebrow">Execution graph</p><h2>Provider orders</h2></div>
+      <span>{{ provider_orders | length }} planned</span>
+    </div>
+    {% if provider_orders %}
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Provider order</th><th>Type</th><th>Provider</th><th>Quantity</th><th>Dependencies</th><th>Plan</th><th>Execution</th></tr></thead>
+          <tbody>
+            {% for item in provider_orders %}
+              <tr>
+                <td>
+                  {% if item.execution %}<a class="order-link" href="/orders/{{ item.execution.scenario_id }}/{{ item.provider_order_id }}">{{ item.provider_order_id }}</a>
+                  {% else %}<strong>{{ item.provider_order_id }}</strong>{% endif %}
+                  <small>{{ item.node_name }}{% if item.terminal %} · terminal{% endif %}{% if item.critical_path %} · critical path{% endif %}</small>
+                </td>
+                <td>{{ item.order_type | replace('_', ' ') }}</td>
+                <td>{{ item.provider_id }}</td>
+                <td>{{ item.quantity }} {{ item.unit }}</td>
+                <td>{% if item.depends_on_provider_order_ids %}{{ item.depends_on_provider_order_ids | join(', ') }}{% else %}<span class="missing">None</span>{% endif %}</td>
+                <td>{{ item.expected_completion_at }}</td>
+                <td>{% if item.execution %}<span class="status status-{{ item.execution.order_status | lower }}">{{ item.execution.order_status | replace('_', ' ') }}</span>{% else %}<span class="missing">No update</span>{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state"><strong>No provider orders.</strong><span>This plan contains no actionable provider work.</span></div>
+    {% endif %}
+  </section>
+
+  <section class="panel detail-panel">
+    <div class="panel-heading"><div><p class="eyebrow">Provenance</p><h2>Projection boundaries</h2></div></div>
+    <p><code>{{ customer_order.projection_version }}</code> joins immutable plan <code>{{ customer_order.plan_sha256 }}</code> to reconciled provider-order state.</p>
+    <p>Delivery uses the latest reported terminal-order forecasts and falls back to the planned date when none exist. It is not an independently trained prediction.</p>
+  </section>
+{% endblock %}

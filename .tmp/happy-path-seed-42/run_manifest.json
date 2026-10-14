@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "run_id": "happy-path-seed-42",
+  "status": "completed",
+  "created_at": "2026-10-05T04:51:50.210194Z",
+  "completed_at": "2026-10-05T04:51:50.231850Z",
+  "generator_version": "0.1.0",
+  "python_version": "3.14.7",
+  "command": [
+    "fabtrace",
+    "simulate",
+    "--scenario",
+    ".fabtrace/config/scenarios/happy_path.json",
+    "--data-dir",
+    "Data",
+    "--output-dir",
+    ".tmp"
+  ],
+  "scenario_path": "/mnt/c/Users/Lohith/bigGits/SupplyChainProject/FabTrace/.fabtrace/config/scenarios/happy_path.json",
+  "data_directory": "/mnt/c/Users/Lohith/bigGits/SupplyChainProject/FabTrace/Data",
+  "source_files": {
+    "inputs.csv": "0c0a3418a80a6e7edea5c63c98c4829d6d6b613cd648c30905fe22f70dbbd17b",
+    "providers.csv": "c529479afe7d35afa750729bf6dd45227a375568c02b8cf401aad239360a13e4",
+    "provision.csv": "d94267801a73745e40bfaee8a30341adb37a168a8a0f28bf5d03f78e05f6c16f",
+    "sequence.csv": "955b51cc347d6f16bf191553d7287c8a4a9eaccffdd0ac0701efb3fc17f90b15",
+    "stages.csv": "87717f108a0fdc874d7a0a261d35c3450d46ce8042eba53e957b9a03a24786ce"
+  },
+  "effective_config_sha256": "9626e375718cf8a71a196fec2f93182351e7d1152b9b48480d3a2165bd218b79",
+  "event_count": 12,
+  "message_count": 11,
+  "error": null
+}

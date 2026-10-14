@@ -1,0 +1,61 @@
+{
+  "description": "Test product to test the dependency graph.",
+  "nodes": {
+    "material-3": {
+      "duration_days": null,
+      "eto_reference_id": "N26",
+      "kind": "material",
+      "lead_time_days": 1.0,
+      "name": "Simple Wafer",
+      "position": {
+        "x": 210.0930088243084,
+        "y": 100.86569147117581
+      },
+      "provider_candidates": [
+        "P208",
+        "P225",
+        "P226",
+        "P227",
+        "P228",
+        "P229",
+        "P230",
+        "P231",
+        "P232",
+        "P233",
+        "P234",
+        "P236",
+        "P237"
+      ],
+      "requires": [],
+      "unit": "wafer"
+    },
+    "output-2": {
+      "duration_days": null,
+      "eto_reference_id": null,
+      "kind": "output",
+      "lead_time_days": null,
+      "name": "SIlicon Wafer",
+      "position": {
+        "x": 163.365373579185,
+        "y": 257.10965784847843
+      },
+      "provider_candidates": [],
+      "requires": [
+        {
+          "node_id": "material-3",
+          "quantity": 4.0,
+          "unit": "wafer"
+        }
+      ],
+      "unit": "wafer"
+    }
+  },
+  "output_node_id": "output-2",
+  "product_id": "new-product",
+  "product_name": "Simple product",
+  "product_version": 2,
+  "schema_version": "1.0",
+  "status": "published",
+  "synthetic": true,
+  "updated_at": "2026-10-12T06:12:35.185018Z"
+}

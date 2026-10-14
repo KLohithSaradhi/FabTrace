@@ -1,0 +1,56 @@
+<div class="panel table-panel">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">Current state</p>
+      <h2>Customer order ledger</h2>
+    </div>
+    <span>{{ orders | length }} result{% if orders | length != 1 %}s{% endif %}</span>
+  </div>
+  {% if orders %}
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Status</th>
+            <th>Provider orders</th>
+            <th>Planned delivery</th>
+            <th>Current estimate</th>
+            <th>Drift</th>
+            <th>Critical path</th>
+            <th>Latest update</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+            <tr>
+              <td>
+                <a class="order-link" href="/customer-orders/{{ order.order_id }}{% if order.scenario_id %}?scenario_id={{ order.scenario_id }}{% endif %}">{{ order.order_id }}</a>
+                <small>{{ order.product_id }} v{{ order.product_version }} · {{ order.scenario_id or "not executed" }}</small>
+              </td>
+              <td><span class="status status-{{ order.status | lower }}">{{ order.status | replace('_', ' ') }}</span></td>
+              <td>
+                {{ order.completed_provider_order_count }} / {{ order.provider_order_count }} complete
+                <small>{{ order.reported_provider_order_count }} reporting</small>
+              </td>
+              <td>{{ order.planned_delivery_at }}</td>
+              <td>{{ order.current_delivery_date }}<small>{{ order.delivery_estimate_source | replace('_', ' ') }}</small></td>
+              <td>
+                <span class="number {% if order.delivery_drift_days > 0 %}negative{% elif order.delivery_drift_days < 0 %}positive{% endif %}">
+                  {% if order.delivery_drift_days > 0 %}+{% endif %}{{ order.delivery_drift_days }} d
+                </span>
+              </td>
+              <td>
+                {% if order.critical_path_blocked_count %}<span class="negative">{{ order.critical_path_blocked_count }} blocked</span>
+                {% else %}<span class="missing">No block reported</span>{% endif %}
+              </td>
+              <td><time>{{ order.latest_provider_update_at or "No provider update" }}</time></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state"><strong>No customer orders found.</strong><span>Register a plan or choose another scenario.</span></div>
+  {% endif %}
+</div>

@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "scenario_id": "happy-path",
+  "scenario_version": 1,
+  "seed": 42,
+  "synthetic": true,
+  "start_at": "2026-01-05T00:00:00Z",
+  "providers": [
+    {
+      "profile": "../providers/P208.json"
+    }
+  ],
+  "purchase_orders": [
+    {
+      "purchase_order_id": "PO-0001",
+      "provider_profile_id": "P208-synthetic-v1",
+      "capability_id": "N26",
+      "quantity": 100,
+      "unit": "wafer"
+    }
+  ]
+}
